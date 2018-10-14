@@ -11,16 +11,14 @@ defmodule Eximap.Imap.Client do
   @initial_state %{socket: nil, tag_number: 1}
   @literal ~r/{([0-9]*)}\r\n/s
 
-  def start_link do
-    GenServer.start_link(__MODULE__, @initial_state)
+  def start_link(host, port, account, pass) do
+    host = host |> to_charlist
+    state = Map.merge(@initial_state, %{host: host, port: port, account: account, pass: pass})
+    GenServer.start_link(__MODULE__, state)
   end
 
-  def init(state) do
+  def init(%{host: host, port: port, account: account, pass: pass} = state) do
     opts = [:binary, active: false]
-    host = Application.get_env(:eximap, :incoming_mail_server) |> to_charlist
-    port = Application.get_env(:eximap, :incoming_port)
-    account = Application.get_env(:eximap, :account)
-    pass = Application.get_env(:eximap, :password)
 
     # todo: Hardcoded SSL connection until I implement the Authentication algorithms to allow login over :gen_tcp
     {:ok, socket} = Socket.connect(true, host, port, opts)
