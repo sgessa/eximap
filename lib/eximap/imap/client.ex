@@ -29,7 +29,8 @@ defmodule Eximap.Imap.Client do
 
     # login using the account name and password
     req = Request.login(account, pass) |> Request.add_tag("EX_LGN")
-    imap_send(socket, req)
+    %Response{status: "OK"} = imap_send(socket, req)
+
     {:ok, %{state | socket: socket}}
   end
 
