@@ -18,7 +18,7 @@ defmodule Eximap.Imap.Client do
   end
 
   def init(%{host: host, port: port, account: account, pass: pass} = state) do
-    opts = [:binary, active: false]
+    opts = build_opts(host)
 
     # todo: Hardcoded SSL connection until I implement the Authentication algorithms to allow login over :gen_tcp
     {:ok, socket} = Socket.connect(true, host, port, opts)
@@ -50,6 +50,9 @@ defmodule Eximap.Imap.Client do
   #
   # Private methods
   #
+
+  defp build_opts('imap.yandex.ru'), do: [:binary, active: false, ciphers: ['AES256-GCM-SHA384']]
+  defp build_opts(_), do: [:binary, active: false]
 
   defp imap_send(socket, req) do
     message = Request.raw(req)
