@@ -97,12 +97,11 @@ defmodule Eximap.Imap.Client do
       [_match | [size]] = Regex.run(@literal, other_parts)
       size = String.to_integer(size)
       [head, tail] = String.split(other_parts, @literal, parts: 2)
-      # literal = for i <- 0..(size - 1), do: Enum.at(String.codepoints(tail), i)
-      # Performace boost.  Large messages and attachments killed this and took > 2 minutes for a 40K attachment.
-      cp=String.codepoints(tail)
-      {literal, _post_literal_cp} = Enum.split(cp,size)
-      literal = to_string(literal)
-      {_, post_literal} = String.split_at(tail, String.length(literal))
+
+      cp = :binary.bin_to_list(tail)
+      {literal, [?) | post_literal_cp]} = Enum.split(cp, size)
+      literal = :binary.list_to_bin(literal)
+      post_literal = :binary.list_to_bin(post_literal_cp)
 
       case post_literal do
         "\r\n" <> next -> [part <> head <> literal, next]
