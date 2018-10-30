@@ -8,8 +8,8 @@ defmodule Eximap.Mixfile do
       app: :eximap,
       version: @version,
       elixir: "~> 1.5",
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
+      build_embedded: Mix.env() == :prod,
+      start_permanent: Mix.env() == :prod,
       package: package(),
       deps: deps(),
       description: "A simple library to interact with an IMAP server",
@@ -30,7 +30,7 @@ defmodule Eximap.Mixfile do
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
       maintainers: ["Cosmin Harangus <cosmin@around25.com>"],
       licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/around25/eximap"},
+      links: %{"GitHub" => "https://github.com/around25/eximap"}
     ]
   end
 
@@ -47,13 +47,14 @@ defmodule Eximap.Mixfile do
     [
       {:credo, "~> 0.8.8", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.16", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.7.4", only: [:dev, :test], runtime: false},
+      {:excoveralls, "~> 0.7.4", only: [:dev, :test], runtime: false}
     ]
   end
 
   defp docs do
     [
-      main: "readme", # The main page in the docs
+      # The main page in the docs
+      main: "readme",
       extras: ["README.md", "DEVELOPER.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md"]
     ]
   end
