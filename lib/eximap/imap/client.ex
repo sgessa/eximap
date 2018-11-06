@@ -31,14 +31,21 @@ defmodule Eximap.Imap.Client do
   def handle_call({:connect, options}, _from, %{buff: buff} = state) do
     %{host: host, port: port, account: account, pass: pass} = options
     host = host |> to_charlist
-    opts = build_opts(host)
 
-    {:ok, socket} = Socket.connect(true, host, port, opts)
+    conn_opts = Map.get(options, :conn_opts, [])
+    conn_opts = build_opts(conn_opts)
 
-    req = Request.login(account, pass) |> Request.add_tag("EX_LGN")
-    {buff, resp} = imap_send(buff, socket, req)
+    {result, new_state} = case Socket.connect(true, host, port, conn_opts) do
+      {:error, _} = err -> {err, @initial_state}
 
-    {:reply, resp, %{state | socket: socket, buff: buff}}
+      {:ok, socket} ->
+        req = Request.login(account, pass) |> Request.add_tag("EX_LGN")
+        {buff, resp} = imap_send(buff, socket, req)
+        {{:ok, resp}, %{state | buff: buff, socket: socket}}
+    end
+
+
+    {:reply, result, new_state}
   end
 
   def handle_call({:command, %Request{} = req}, _from, %{socket: socket, tag_number: tag_number, buff: buff} = state) do
@@ -54,9 +61,10 @@ defmodule Eximap.Imap.Client do
   #
   # Private methods
   #
-
-  defp build_opts('imap.yandex.ru'), do: [:binary, active: false, ciphers: ['AES256-GCM-SHA384']]
-  defp build_opts(_), do: [:binary, active: false]
+  defp build_opts(user_opts) do
+    allowed_opts = :proplists.unfold(user_opts) |> Enum.reject(fn {k, _} -> (k == :binary || k == :active) end)
+    [:binary, active: false] ++ allowed_opts
+  end
 
   defp imap_send(buff, socket, req) do
     message = Request.raw(req)
