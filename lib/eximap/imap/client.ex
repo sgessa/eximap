@@ -10,28 +10,35 @@ defmodule Eximap.Imap.Client do
   """
 
   @initial_state %{socket: nil, tag_number: 1, buff: ""}
+  @recv_timeout 20_000
 
-  def start_link(host, port, account, pass) do
-    host = host |> to_charlist
-    state = Map.merge(@initial_state, %{host: host, port: port, account: account, pass: pass})
-    GenServer.start_link(__MODULE__, state)
+  def start_link() do
+    GenServer.start_link(__MODULE__, :ok)
   end
 
-  def init(%{host: host, port: port, account: account, pass: pass, buff: buff} = state) do
-    opts = build_opts(host)
+  def init(:ok) do
+    {:ok, @initial_state}
+  end
 
-    # todo: Hardcoded SSL connection until I implement the Authentication algorithms to allow login over :gen_tcp
-    {:ok, socket} = Socket.connect(true, host, port, opts)
-
-    # login using the account name and password
-    req = Request.login(account, pass) |> Request.add_tag("EX_LGN")
-    {buff, %Response{status: "OK"}} = imap_send(buff, socket, req)
-
-    {:ok, %{state | socket: socket, buff: buff}}
+  def connect(pid, %{host: _, port: _, account: _, pass: _} = options) do
+    GenServer.call(pid, {:connect, options})
   end
 
   def execute(pid, req) do
-    GenServer.call(pid, {:command, req}, 20000)
+    GenServer.call(pid, {:command, req}, @recv_timeout)
+  end
+
+  def handle_call({:connect, options}, _from, %{buff: buff} = state) do
+    %{host: host, port: port, account: account, pass: pass} = options
+    host = host |> to_charlist
+    opts = build_opts(host)
+
+    {:ok, socket} = Socket.connect(true, host, port, opts)
+
+    req = Request.login(account, pass) |> Request.add_tag("EX_LGN")
+    {buff, resp} = imap_send(buff, socket, req)
+
+    {:reply, resp, %{state | socket: socket, buff: buff}}
   end
 
   def handle_call({:command, %Request{} = req}, _from, %{socket: socket, tag_number: tag_number, buff: buff} = state) do
@@ -58,7 +65,7 @@ defmodule Eximap.Imap.Client do
   end
 
   defp imap_send_raw(socket, msg) do
-   # IO.inspect "C: #{msg}"
+    # IO.inspect "C: #{msg}"
     Socket.send(socket, msg)
   end
 
@@ -75,7 +82,7 @@ defmodule Eximap.Imap.Client do
     {buff, responses} = if tagged_response_arrived?(tag, responses) do
       {buff, responses}
     else
-      case Socket.recv(socket, 0, 20000) do
+      case Socket.recv(socket, 0, @recv_timeout) do
         {:ok, data} ->
           buff = buff <> data
           {buff, responses} = case String.contains?(buff, "\r\n") do

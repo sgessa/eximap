@@ -1,16 +1,24 @@
 defmodule EximapTest do
   use ExUnit.Case, async: false
   alias Eximap.Imap.{Client, Request}
-  doctest Eximap
-  doctest Eximap.Socket
-  doctest Eximap.Imap.Client
-  doctest Eximap.Imap.Request
-  doctest Eximap.Imap.Response
+  #doctest Eximap
+  #doctest Eximap.Socket
+  #doctest Eximap.Imap.Client
+  #doctest Eximap.Imap.Request
+  #doctest Eximap.Imap.Response
 
   @large_mailbox_message_count 500
 
   setup_all do
+    opts = %{
+      host: Application.get_env(:eximap, :incoming_mail_server),
+      port: Application.get_env(:eximap, :incoming_port),
+      account: Application.get_env(:eximap, :account),
+      pass: Application.get_env(:eximap, :password)
+    }
+
     {:ok, pid} = Client.start_link()
+    Client.connect(pid, opts)
     [pid: pid]
   end
 
