@@ -25,7 +25,7 @@ defmodule EximapTest do
     pid = state.pid
     ensure_large_mailbox(pid, "INBOX")
     resp = execute!(pid, Request.search(["ALL"]))
-    seqs = String.split(hd(tl(resp.body)).message, " ")
+    seqs = String.split(hd(resp.body).message, " ")
     fields = "BODY.PEEK[HEADER.FIELDS (RECEIVED)]"
     execute!(pid, Request.fetch(hd(seqs), fields)).body
   end
