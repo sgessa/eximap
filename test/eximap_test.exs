@@ -53,7 +53,7 @@ defmodule EximapTest do
 
   # execute with exception on error
   defp execute!(pid, req) do
-    resp = Client.execute(pid, req)
+    {:ok, resp} = Client.execute(pid, req)
     if (assert resp.error == nil), do: resp
   end
 

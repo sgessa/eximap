@@ -78,17 +78,22 @@ defmodule Eximap.Imap.Client do
   end
 
   defp imap_receive(buff, socket, req) do
-    {buff, responses} = fill_responses(buff, socket, req.tag, [])
+    {buff, result} = fill_responses(buff, socket, req.tag, [])
 
-    responses = responses |> Enum.map(fn %{body: b} -> b end)
-    result = Response.parse(%Response{request: req}, responses)
+    result = case result do
+      {:ok, responses} ->
+        responses = responses |> Enum.map(fn %{body: b} -> b end)
+        {:ok, Response.parse(%Response{request: req}, responses)}
+
+      {:err, _} = v -> v
+    end
 
     {buff, result}
   end
 
   defp fill_responses(buff, socket, tag, responses) do
-    {buff, responses} = if tagged_response_arrived?(tag, responses) do
-      {buff, responses}
+    {buff, result} = if tagged_response_arrived?(tag, responses) do
+      {buff, {:ok, responses}}
     else
       case Socket.recv(socket, 0, @recv_timeout) do
         {:ok, data} ->
@@ -99,12 +104,12 @@ defmodule Eximap.Imap.Client do
           end
           fill_responses(buff, socket, tag, responses)
 
-        {:error, reason} ->
-          {buff, responses}
+        {:error, _} = v ->
+          {buff, v}
       end
     end
 
-    {buff, responses}
+    {buff, result}
   end
 
 
