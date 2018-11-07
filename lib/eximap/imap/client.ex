@@ -10,7 +10,8 @@ defmodule Eximap.Imap.Client do
   """
 
   @initial_state %{socket: nil, tag_number: 1, buff: ""}
-  @recv_timeout 20_000
+  @recv_timeout 3_000
+  @total_timeout 20_000
 
   def start_link() do
     GenServer.start_link(__MODULE__, :ok)
@@ -25,7 +26,7 @@ defmodule Eximap.Imap.Client do
   end
 
   def execute(pid, req) do
-    GenServer.call(pid, {:command, req}, @recv_timeout)
+    GenServer.call(pid, {:command, req}, @total_timeout)
   end
 
   def handle_call({:connect, options}, _from, %{buff: buff} = state) do
@@ -68,8 +69,10 @@ defmodule Eximap.Imap.Client do
 
   defp imap_send(buff, socket, req) do
     message = Request.raw(req)
-    imap_send_raw(socket, message)
-    imap_receive(buff, socket, req)
+    case imap_send_raw(socket, message) do
+      :ok -> imap_receive(buff, socket, req)
+      {:error, _} = v -> {buff, v}
+    end
   end
 
   defp imap_send_raw(socket, msg) do
@@ -85,7 +88,7 @@ defmodule Eximap.Imap.Client do
         responses = responses |> Enum.map(fn %{body: b} -> b end)
         {:ok, Response.parse(%Response{request: req}, responses)}
 
-      {:err, _} = v -> v
+      {:error, _} = v -> v
     end
 
     {buff, result}
