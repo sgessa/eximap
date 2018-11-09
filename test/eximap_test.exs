@@ -14,7 +14,7 @@ defmodule EximapTest do
       host: Application.get_env(:eximap, :incoming_mail_server),
       port: Application.get_env(:eximap, :incoming_port),
       account: Application.get_env(:eximap, :account),
-      pass: Application.get_env(:eximap, :password)
+      password: Application.get_env(:eximap, :password)
     }
 
     {:ok, pid} = Client.start_link()

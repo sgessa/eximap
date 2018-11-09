@@ -21,7 +21,7 @@ defmodule Eximap.Imap.Client do
     {:ok, @initial_state}
   end
 
-  def connect(pid, %{host: _, port: _, account: _, pass: _} = options) do
+  def connect(pid, %{host: _, port: _, account: _, password: _} = options) do
     GenServer.call(pid, {:connect, options})
   end
 
@@ -30,7 +30,7 @@ defmodule Eximap.Imap.Client do
   end
 
   def handle_call({:connect, options}, _from, %{buff: buff} = state) do
-    %{host: host, port: port, account: account, pass: pass} = options
+    %{host: host, port: port, account: account, password: password} = options
     host = host |> to_charlist
 
     conn_opts = Map.get(options, :conn_opts, [])
@@ -40,7 +40,7 @@ defmodule Eximap.Imap.Client do
       {:error, _} = err -> {err, @initial_state}
 
       {:ok, socket} ->
-        req = Request.login(account, pass) |> Request.add_tag("EX_LGN")
+        req = Request.login(account, password) |> Request.add_tag("EX_LGN")
         {buff, resp} = imap_send(buff, socket, req)
         {{:ok, resp}, %{state | buff: buff, socket: socket}}
     end
