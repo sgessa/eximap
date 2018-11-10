@@ -37,8 +37,7 @@ defmodule Eximap.Mixfile do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
-      mod: {Eximap.Application, []}
+      extra_applications: [:logger]
     ]
   end
 
