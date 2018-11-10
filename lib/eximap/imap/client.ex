@@ -14,7 +14,7 @@ defmodule Eximap.Imap.Client do
   @total_timeout 20_000
 
   def start_link() do
-    GenServer.start_link(__MODULE__, :ok)
+    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
   end
 
   def init(:ok) do
