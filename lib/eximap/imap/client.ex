@@ -33,10 +33,10 @@ defmodule Eximap.Imap.Client do
     %{host: host, port: port, account: account, password: password} = options
     host = host |> to_charlist
 
-    conn_opts = Map.get(options, :conn_opts, [])
-    conn_opts = build_opts(conn_opts)
+    sock_opts = Map.get(options, :socket_options, [])
+    sock_opts = build_opts(sock_opts)
 
-    {result, new_state} = case Socket.connect(true, host, port, conn_opts) do
+    {result, new_state} = case Socket.connect(true, host, port, sock_opts) do
       {:error, _} = err -> {err, @initial_state}
 
       {:ok, socket} ->
