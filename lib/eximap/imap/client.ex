@@ -42,7 +42,7 @@ defmodule Eximap.Imap.Client do
       {:ok, socket} ->
         req = Request.login(account, password) |> Request.add_tag("EX_LGN")
         {buff, resp} = imap_send(buff, socket, req)
-        {{:ok, resp}, %{state | buff: buff, socket: socket}}
+        {resp, %{state | buff: buff, socket: socket}}
     end
 
 
