@@ -10,7 +10,7 @@ defmodule Eximap.Imap.Client do
   """
 
   @initial_state %{socket: nil, tag_number: 1, buff: ""}
-  @recv_timeout 3_000
+  @recv_timeout 10_000
   @total_timeout 20_000
 
   def start_link() do
