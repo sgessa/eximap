@@ -13,8 +13,8 @@ defmodule Eximap.Imap.Client do
   @recv_timeout 10_000
   @total_timeout 20_000
 
-  def start_link() do
-    GenServer.start_link(__MODULE__, :ok, name: __MODULE__)
+  def start_link(opts \\ []) do
+    GenServer.start_link(__MODULE__, :ok, name: Keyword.get(opts, :name))
   end
 
   def init(:ok) do
