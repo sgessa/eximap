@@ -9,35 +9,37 @@ defmodule Eximap.Imap.Client do
   Imap Client GenServer
   """
 
-  @initial_state %{socket: nil, tag_number: 1, buff: ""}
+  @initial_state %{socket: nil, tag_number: 1, buff: "", conn_opts: nil}
   @recv_timeout 10_000
   @total_timeout 20_000
 
-  def start_link(opts \\ []) do
-    GenServer.start_link(__MODULE__, :ok, name: Keyword.get(opts, :name))
+  def start_link(conn_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, conn_opts, name: Keyword.get(opts, :name))
   end
 
-  def init(:ok) do
-    {:ok, @initial_state}
+  def init(%{host: host, port: _, account: _, password: _} = conn_opts) do
+    host = to_charlist(host)
+    conn_opts = Map.put(conn_opts, :host, host)
+
+    sock_opts = Map.get(conn_opts, :socket_options, [])
+    conn_opts = Map.put(conn_opts, :socket_options, build_opts(sock_opts))
+
+    {:ok, %{@initial_state | conn_opts: conn_opts}}
   end
 
-  def connect(pid, %{host: _, port: _, account: _, password: _} = options) do
-    GenServer.call(pid, {:connect, options})
+  def connect(pid) do
+    GenServer.call(pid, :connect)
   end
 
   def execute(pid, req) do
     GenServer.call(pid, {:command, req}, @total_timeout)
   end
 
-  def handle_call({:connect, options}, _from, %{buff: buff} = state) do
-    %{host: host, port: port, account: account, password: password} = options
-    host = host |> to_charlist
-
-    sock_opts = Map.get(options, :socket_options, [])
-    sock_opts = build_opts(sock_opts)
+  def handle_call(:connect, _from, %{buff: buff, conn_opts: options} = state) do
+    %{host: host, port: port, account: account, password: password, socket_options: sock_opts} = options
 
     {result, new_state} = case Socket.connect(true, host, port, sock_opts) do
-      {:error, _} = err -> {err, @initial_state}
+      {:error, _} = err -> {err, state}
 
       {:ok, socket} ->
         req = Request.login(account, password) |> Request.add_tag("EX_LGN")

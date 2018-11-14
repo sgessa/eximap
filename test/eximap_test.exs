@@ -17,8 +17,8 @@ defmodule EximapTest do
       password: Application.get_env(:eximap, :password)
     }
 
-    {:ok, pid} = Client.start_link()
-    Client.connect(pid, opts)
+    {:ok, pid} = Client.start_link(opts)
+    Client.connect(pid)
     [pid: pid]
   end
 
