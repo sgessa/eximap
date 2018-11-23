@@ -31,7 +31,19 @@ defmodule Eximap.Imap.Response do
         [type | [msg]] -> {type, msg}
         [type] -> {type, nil}
       end
-      %{type: type, message: msg}
+
+      if parsing_enabled?() && fetch_message?(msg) do
+        %{type: type, message: msg, parsed_message: Eximap.Imap.Parser.parse_fetch(msg)}
+      else
+        %{type: type, message: msg}
+      end
     end)
+  end
+
+  defp fetch_message?(str) when is_binary(str), do: String.starts_with?(str, "FETCH")
+  defp fetch_message?(_), do: false
+
+  defp parsing_enabled? do
+    Application.get_env(:eximap, :parser_enabled)
   end
 end

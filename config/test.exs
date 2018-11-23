@@ -11,3 +11,6 @@ config :eximap,
        # unused for IMAP
        outgoing_mail_server: "127.0.0.1",
        outgoing_port: 465
+
+
+config :eximap, :parser_enabled, false
