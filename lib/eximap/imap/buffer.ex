@@ -1,4 +1,6 @@
-defmodule Eximap.Imap.BufferParser do
+defmodule Eximap.Imap.Buffer do
+  import Eximap.Utils
+
   @literal ~r/{(\d+)}\r\n/s
 
   def extract_responses("", responses) do
@@ -35,9 +37,7 @@ defmodule Eximap.Imap.BufferParser do
   end
 
   def extract_response(buff, %{body: body, bytes_left: bytes_left}) do
-    {taken_list, rest_list} = buff |> :binary.bin_to_list() |> Enum.split(bytes_left)
-    taken = :binary.list_to_bin(taken_list)
-    rest = :binary.list_to_bin(rest_list)
+    {taken, rest} = split_bytes(buff, bytes_left)
 
     extract_response(rest, %{body: body <> taken, bytes_left: bytes_left - byte_size(taken)})
   end

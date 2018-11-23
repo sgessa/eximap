@@ -3,7 +3,7 @@ defmodule Eximap.Imap.Client do
   alias Eximap.Imap.Request
   alias Eximap.Imap.Response
   alias Eximap.Socket
-  alias Eximap.Imap.BufferParser, as: Parser
+  alias Eximap.Imap.Buffer
 
   @moduledoc """
   Imap Client GenServer
@@ -104,7 +104,7 @@ defmodule Eximap.Imap.Client do
         {:ok, data} ->
           buff = buff <> data
           {buff, responses} = case String.contains?(buff, "\r\n") do
-            true -> Parser.extract_responses(buff, responses)
+            true -> Buffer.extract_responses(buff, responses)
             false -> {buff, responses}
           end
           fill_responses(buff, socket, tag, responses)
