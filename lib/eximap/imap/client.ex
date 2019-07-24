@@ -103,10 +103,7 @@ defmodule Eximap.Imap.Client do
       case Socket.recv(socket, 0, @recv_timeout) do
         {:ok, data} ->
           buff = buff <> data
-          {buff, responses} = case String.contains?(buff, "\r\n") do
-            true -> Buffer.extract_responses(buff, responses)
-            false -> {buff, responses}
-          end
+          {buff, responses} = Buffer.extract_responses(buff, responses)
           fill_responses(buff, socket, tag, responses)
 
         {:error, _} = v ->
