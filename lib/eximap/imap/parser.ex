@@ -23,6 +23,7 @@ defmodule Eximap.Imap.Parser do
         key == "FLAGS" -> parse_flags(rest)
         key == "RFC822.SIZE" -> parse_number(rest)
         String.starts_with?(key, "RFC822") -> parse_nstring(rest)
+        key == "BODY[]" -> parse_nstring(rest)
         key == "ENVELOPE" -> Envelope.parse_envelope(rest)
         key == "INTERNALDATE" -> parse_date_time(rest)
         key == "UID" -> parse_uniqueid(rest)

@@ -29,7 +29,7 @@ defmodule Eximap.Imap.Parser.Utils do
   end
 
   def parse_nz_number(rest) do
-    [val, rest] = String.split(rest, ~r{[1-9]\d+(?<space>\s)}, on: [:space], parts: 2)
+    [val, rest] = String.split(rest, ~r{[1-9]\d*(?<space>\s)}, on: [:space], parts: 2)
     {val, rest}
   end
 

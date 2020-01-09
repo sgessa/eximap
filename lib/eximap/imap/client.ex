@@ -102,6 +102,7 @@ defmodule Eximap.Imap.Client do
     else
       case Socket.recv(socket, 0, @recv_timeout) do
         {:ok, data} ->
+          # IO.inspect("S: #{data}")
           buff = buff <> data
           {buff, responses} = Buffer.extract_responses(buff, responses)
           fill_responses(buff, socket, tag, responses)

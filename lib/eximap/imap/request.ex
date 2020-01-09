@@ -181,4 +181,6 @@ defmodule Eximap.Imap.Request do
   def store(sequence, item, value), do: %Eximap.Imap.Request{command: "STORE", params: [sequence, item, value]}
   def copy(sequence, mailbox), do: %Eximap.Imap.Request{command: "COPY", params: [sequence, mailbox]}
   def uid(params), do: %Eximap.Imap.Request{command: "UID", params: params}
+  def uid_fetch(sequence, flags), do: %Eximap.Imap.Request{command: "UID FETCH", params: [sequence, flags]}
+  def uid_search(flags), do: %Eximap.Imap.Request{command: "UID SEARCH", params: flags}
 end
