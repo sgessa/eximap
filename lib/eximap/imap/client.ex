@@ -17,7 +17,7 @@ defmodule Eximap.Imap.Client do
     GenServer.start_link(__MODULE__, conn_opts, name: Keyword.get(opts, :name))
   end
 
-  def init(%{host: host, port: _, account: _, password: _} = conn_opts) do
+  def init(%{host: host, port: _, account: _} = conn_opts) do
     host = to_charlist(host)
     conn_opts = Map.put(conn_opts, :host, host)
 
@@ -36,13 +36,19 @@ defmodule Eximap.Imap.Client do
   end
 
   def handle_call(:connect, _from, %{buff: buff, conn_opts: options} = state) do
-    %{host: host, port: port, account: account, password: password, socket_options: sock_opts} = options
+    %{host: host, port: port, account: account, socket_options: sock_opts} = options
 
     {result, new_state} = case Socket.connect(true, host, port, sock_opts) do
       {:error, _} = err -> {err, state}
 
       {:ok, socket} ->
-        req = Request.login(account, password) |> Request.add_tag("EX_LGN")
+        req = case Map.get(options, :xoauth2) do
+          nil ->
+              Request.login(account, options.password) |> Request.add_tag("EX_LGN")
+          token ->
+              token = Base.encode64("user=" <> account <> "\u0001auth=Bearer " <> token <> "\u0001\u0001")
+              Request.authenticate("XOAUTH2 " <> token) |> Request.add_tag("EX_LGN")
+        end
         {buff, resp} = imap_send(buff, socket, req)
         {resp, %{state | buff: buff, socket: socket}}
     end
