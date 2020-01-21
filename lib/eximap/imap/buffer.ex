@@ -22,7 +22,11 @@ defmodule Eximap.Imap.Buffer do
 
   def extract_response("", response), do: {"", response}
 
-  def extract_response(buff, %{body: body, bytes_left: 0} = resp) do
+  def extract_response(buff, %{body: body, bytes_left: :unknown, last_line: line}) do
+    extract_response(line <> buff, %{body: body, bytes_left: 0})
+  end
+
+  def extract_response(buff, %{body: body, bytes_left: 0}) do
     case String.split(buff, "\r\n", parts: 2) do
       [line, rest] ->
         line = line <> "\r\n"
@@ -36,14 +40,22 @@ defmodule Eximap.Imap.Buffer do
           response = %{body: body <> line, bytes_left: 0}
           {rest, response}
         end
-      [_] -> {buff, resp}
+
+      [line] ->
+        {"", %{body: body, bytes_left: :unknown, last_line: line}}
     end
   end
 
   def extract_response(buff, %{body: body, bytes_left: bytes_left}) do
     {taken, rest} = split_bytes(buff, bytes_left)
 
-    extract_response(rest, %{body: body <> taken, bytes_left: bytes_left - byte_size(taken)})
+    bytes_left = bytes_left - byte_size(taken)
+    if bytes_left == 0 do
+      extract_response(rest, %{body: body <> taken, bytes_left: :unknown, last_line: ""})
+    else
+      extract_response(rest, %{body: body <> taken, bytes_left: bytes_left})
+    end
+
   end
 
   defp current_response([]), do: %{body: "", bytes_left: 0}
@@ -55,5 +67,5 @@ defmodule Eximap.Imap.Buffer do
     end
   end
 
-  defp partial?(%{bytes_left: b}), do: b > 0
+  defp partial?(%{bytes_left: b}), do: b == :unknown || b > 0
 end

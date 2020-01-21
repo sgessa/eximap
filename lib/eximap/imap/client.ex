@@ -127,5 +127,5 @@ defmodule Eximap.Imap.Client do
     !partial?(resp) && String.starts_with?(resp.body, tag)
   end
 
-  defp partial?(%{bytes_left: b}), do: b > 0
+  defp partial?(%{bytes_left: b}), do: b == :unknown || b > 0
 end
