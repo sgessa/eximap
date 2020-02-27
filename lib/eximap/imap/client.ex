@@ -10,8 +10,8 @@ defmodule Eximap.Imap.Client do
   """
 
   @initial_state %{socket: nil, tag_number: 1, buff: "", conn_opts: nil}
-  @recv_timeout 10_000
-  @total_timeout 20_000
+  @recv_timeout 20_000
+  @total_timeout 30_000
 
   def start_link(conn_opts, opts \\ []) do
     GenServer.start_link(__MODULE__, conn_opts, name: Keyword.get(opts, :name))

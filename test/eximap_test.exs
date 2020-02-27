@@ -18,7 +18,7 @@ defmodule EximapTest do
     }
 
     {:ok, pid} = Client.start_link(opts)
-    Client.connect(pid)
+    {:ok, _} = Client.connect(pid)
     [pid: pid]
   end
 
