@@ -7,19 +7,13 @@ defmodule Eximap.Mixfile do
     [
       app: :eximap,
       version: @version,
-      elixir: "~> 1.5",
-      build_embedded: Mix.env == :prod,
-      start_permanent: Mix.env == :prod,
+      elixir: "~> 1.7",
       package: package(),
       deps: deps(),
       description: "A simple library to interact with an IMAP server",
-
-      # Docs
       name: "Eximap",
-      source_url: "https://github.com/around25/eximap",
-      homepage_url: "https://around25.com",
-      test_coverage: [tool: ExCoveralls],
-      preferred_cli_env: [coveralls: :test],
+      source_url: "https://github.com/sgessa/eximap",
+      homepage_url: "https://github.com/sgessa/eximap",
       docs: docs()
     ]
   end
@@ -28,31 +22,30 @@ defmodule Eximap.Mixfile do
     [
       name: "eximap",
       files: ["lib", "mix.exs", "README*", "LICENSE*"],
-      maintainers: ["Cosmin Harangus <cosmin@around25.com>"],
-      licenses: ["Apache 2.0"],
-      links: %{"GitHub" => "https://github.com/around25/eximap"},
+      maintainers: ["Stefano Gessa <stefano@gessa.net>"],
+      licenses: ["BSD"],
+      links: %{"GitHub" => "https://github.com/sgessa/eximap"}
     ]
   end
 
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger, :ssl]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 0.8.8", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.16", only: [:dev, :test], runtime: false},
-      {:excoveralls, "~> 0.7.4", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.16", only: [:dev, :test], runtime: false}
     ]
   end
 
   defp docs do
     [
-      main: "readme", # The main page in the docs
+      # The main page in the docs
+      main: "readme",
       extras: ["README.md", "DEVELOPER.md", "CONTRIBUTING.md", "CODE_OF_CONDUCT.md"]
     ]
   end
