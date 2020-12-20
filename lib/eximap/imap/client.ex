@@ -38,32 +38,43 @@ defmodule Eximap.Imap.Client do
   def handle_call(:connect, _from, %{buff: buff, conn_opts: options} = state) do
     %{host: host, port: port, account: account, socket_options: sock_opts} = options
 
-    {result, new_state} = case Socket.connect(true, host, port, sock_opts) do
-      {:error, _} = err -> {err, state}
+    {result, new_state} =
+      case Socket.connect(true, host, port, sock_opts) do
+        {:error, _} = err ->
+          {err, state}
 
-      {:ok, socket} ->
-        req = case Map.get(options, :xoauth2) do
-          nil ->
-              Request.login(account, options.password) |> Request.add_tag("EX_LGN")
-          token ->
-              token = Base.encode64("user=" <> account <> "\u0001auth=Bearer " <> token <> "\u0001\u0001")
-              Request.authenticate("XOAUTH2 " <> token) |> Request.add_tag("EX_LGN")
-        end
-        {buff, resp} = imap_send(buff, socket, req)
-        {resp, %{state | buff: buff, socket: socket}}
-    end
+        {:ok, socket} ->
+          req =
+            case Map.get(options, :xoauth2) do
+              nil ->
+                Request.login(account, options.password) |> Request.add_tag("EX_LGN")
 
+              token ->
+                token =
+                  Base.encode64(
+                    "user=" <> account <> "\u0001auth=Bearer " <> token <> "\u0001\u0001"
+                  )
+
+                Request.authenticate("XOAUTH2 " <> token) |> Request.add_tag("EX_LGN")
+            end
+
+          {buff, resp} = imap_send(buff, socket, req)
+          {resp, %{state | buff: buff, socket: socket}}
+      end
 
     {:reply, result, new_state}
   end
 
-  def handle_call({:command, %Request{} = req}, _from, %{socket: socket, tag_number: tag_number, buff: buff} = state) do
+  def handle_call(
+        {:command, %Request{} = req},
+        _from,
+        %{socket: socket, tag_number: tag_number, buff: buff} = state
+      ) do
     {buff, resp} = imap_send(buff, socket, %Request{req | tag: "EX#{tag_number}"})
     {:reply, resp, %{state | tag_number: tag_number + 1, buff: buff}}
   end
 
-  def handle_info(resp, state) do
-    IO.inspect resp
+  def handle_info(_resp, state) do
     {:noreply, state}
   end
 
@@ -71,12 +82,15 @@ defmodule Eximap.Imap.Client do
   # Private methods
   #
   defp build_opts(user_opts) do
-    allowed_opts = :proplists.unfold(user_opts) |> Enum.reject(fn {k, _} -> (k == :binary || k == :active) end)
+    allowed_opts =
+      :proplists.unfold(user_opts) |> Enum.reject(fn {k, _} -> k == :binary || k == :active end)
+
     [:binary, active: false] ++ allowed_opts
   end
 
   defp imap_send(buff, socket, req) do
     message = Request.raw(req)
+
     case imap_send_raw(socket, message) do
       :ok -> imap_receive(buff, socket, req)
       {:error, _} = v -> {buff, v}
@@ -91,38 +105,41 @@ defmodule Eximap.Imap.Client do
   defp imap_receive(buff, socket, req) do
     {buff, result} = fill_responses(buff, socket, req.tag, [])
 
-    result = case result do
-      {:ok, responses} ->
-        responses = responses |> Enum.map(fn %{body: b} -> b end)
-        {:ok, Response.parse(%Response{request: req}, responses)}
+    result =
+      case result do
+        {:ok, responses} ->
+          responses = responses |> Enum.map(fn %{body: b} -> b end)
+          {:ok, Response.parse(%Response{request: req}, responses)}
 
-      {:error, _} = v -> v
-    end
+        {:error, _} = v ->
+          v
+      end
 
     {buff, result}
   end
 
   defp fill_responses(buff, socket, tag, responses) do
-    {buff, result} = if tagged_response_arrived?(tag, responses) do
-      {buff, {:ok, responses}}
-    else
-      case Socket.recv(socket, 0, @recv_timeout) do
-        {:ok, data} ->
-          # IO.inspect("S: #{data}")
-          buff = buff <> data
-          {buff, responses} = Buffer.extract_responses(buff, responses)
-          fill_responses(buff, socket, tag, responses)
+    {buff, result} =
+      if tagged_response_arrived?(tag, responses) do
+        {buff, {:ok, responses}}
+      else
+        case Socket.recv(socket, 0, @recv_timeout) do
+          {:ok, data} ->
+            # IO.inspect("S: #{data}")
+            buff = buff <> data
+            {buff, responses} = Buffer.extract_responses(buff, responses)
+            fill_responses(buff, socket, tag, responses)
 
-        {:error, _} = v ->
-          {buff, v}
+          {:error, _} = v ->
+            {buff, v}
+        end
       end
-    end
 
     {buff, result}
   end
 
-
   defp tagged_response_arrived?(_tag, []), do: false
+
   defp tagged_response_arrived?(tag, [resp | _]) do
     !partial?(resp) && String.starts_with?(resp.body, tag)
   end
