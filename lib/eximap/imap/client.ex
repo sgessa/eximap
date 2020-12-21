@@ -1,9 +1,8 @@
 defmodule Eximap.Imap.Client do
   use GenServer
-  alias Eximap.Imap.Request
-  alias Eximap.Imap.Response
+
+  alias Eximap.Imap.{Buffer, Request, Response}
   alias Eximap.Socket
-  alias Eximap.Imap.Buffer
 
   @moduledoc """
   Imap Client GenServer
@@ -15,6 +14,10 @@ defmodule Eximap.Imap.Client do
 
   def start_link(conn_opts, opts \\ []) do
     GenServer.start_link(__MODULE__, conn_opts, name: Keyword.get(opts, :name))
+  end
+
+  def start(conn_opts, opts \\ []) do
+    GenServer.start(__MODULE__, conn_opts, name: Keyword.get(opts, :name))
   end
 
   def init(%{host: host, port: _, account: _} = conn_opts) do
@@ -29,6 +32,10 @@ defmodule Eximap.Imap.Client do
 
   def connect(pid) do
     GenServer.call(pid, :connect)
+  end
+
+  def disconnect(pid) do
+    GenServer.call(pid, :disconnect)
   end
 
   def execute(pid, req) do
@@ -63,6 +70,11 @@ defmodule Eximap.Imap.Client do
       end
 
     {:reply, result, new_state}
+  end
+
+  def handle_call(:disconnect, _from, %{socket: socket} = state) do
+    Socket.close(socket)
+    {:stop, :shutdown, state}
   end
 
   def handle_call(

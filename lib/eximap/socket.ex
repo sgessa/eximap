@@ -14,6 +14,12 @@ defmodule Eximap.Socket do
   end
 
   @doc """
+  Close the TCP socket based on the type of the connection
+  """
+  def close({:sslsocket, _, _} = socket), do: :ssl.close(socket)
+  def close({:gen_tcp, _, _} = socket), do: :gen_tcp.close(socket)
+
+  @doc """
   Set options for the socket based on the type of the connection
   """
   def setopts({:sslsocket, _, _} = socket, opts), do: :ssl.setopts(socket, opts)
