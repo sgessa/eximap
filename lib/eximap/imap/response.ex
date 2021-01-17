@@ -8,13 +8,14 @@ defmodule Eximap.Imap.Response do
   def parse(resp, []), do: resp
 
   def parse(resp, lines) do
-    {{status, message}, body} = if String.starts_with?(hd(lines), resp.request.tag) do
-      {parse_tagged_line(hd(lines)), parse_untagged_lines(tl(lines))}
-    else
-      {{nil, nil }, parse_untagged_lines(lines)}
-    end
+    {{status, message}, body} =
+      if String.starts_with?(hd(lines), resp.request.tag) do
+        {parse_tagged_line(hd(lines)), parse_untagged_lines(tl(lines))}
+      else
+        {{nil, nil}, parse_untagged_lines(lines)}
+      end
 
-    %Response{ resp | status: status, message: message, body: body }
+    %Response{resp | status: status, message: message, body: body}
   end
 
   def parse_tagged_line(line) do
@@ -27,10 +28,12 @@ defmodule Eximap.Imap.Response do
     |> Enum.reverse()
     |> Enum.map(fn "* " <> line ->
       line = String.trim_trailing(line, "\r\n")
-      {type, msg} = case String.split(line, " ", parts: 2) do
-        [type | [msg]] -> {type, msg}
-        [type] -> {type, nil}
-      end
+
+      {type, msg} =
+        case String.split(line, " ", parts: 2) do
+          [type | [msg]] -> {type, msg}
+          [type] -> {type, nil}
+        end
 
       if parsing_enabled?() && fetch_message?(msg) do
         %{type: type, message: msg, parsed_message: Eximap.Imap.Parser.parse_fetch(msg)}

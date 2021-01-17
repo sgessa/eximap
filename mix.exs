@@ -1,7 +1,7 @@
 defmodule Eximap.Mixfile do
   use Mix.Project
 
-  @version "0.1.1-dev"
+  @version "0.1.0"
 
   def project do
     [
@@ -10,7 +10,7 @@ defmodule Eximap.Mixfile do
       elixir: "~> 1.7",
       package: package(),
       deps: deps(),
-      description: "A simple library to interact with an IMAP server",
+      description: "An other Elixir IMAP Client",
       name: "Eximap",
       source_url: "https://github.com/sgessa/eximap",
       homepage_url: "https://github.com/sgessa/eximap",

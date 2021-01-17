@@ -12,14 +12,15 @@ defmodule Eximap.Imap.Request do
         [] -> nil
         _ -> Enum.join(req.params, " ")
       end
-     s =
+
+    s =
       [req.tag, req.command, params]
       |> Enum.filter(& &1)
       |> Enum.map(&to_string(&1))
       |> Enum.join(" ")
-     s <> "\r\n"
-  end
 
+    s <> "\r\n"
+  end
 
   @doc ~S"""
   The NOOP command always succeeds.  It does nothing.
@@ -63,7 +64,8 @@ defmodule Eximap.Imap.Request do
   The AUTHENTICATE command indicates a SASL authentication mechanism to the server. If the server supports the requested
   authentication mechanism, it performs an authentication protocol exchange to authenticate and identify the client.
   """
-  def authenticate(mechanism), do: %Eximap.Imap.Request{command: "AUTHENTICATE", params: [mechanism]}
+  def authenticate(mechanism),
+    do: %Eximap.Imap.Request{command: "AUTHENTICATE", params: [mechanism]}
 
   @doc ~S"""
   The LOGIN command identifies the client to the server and carries
@@ -80,8 +82,11 @@ defmodule Eximap.Imap.Request do
     true
 
   """
-  def list(reference\\"\"\"", mailbox \\ "\"%\""), do: %Eximap.Imap.Request{command: "LIST", params: [reference, mailbox]}
-  def lsub(reference\\"\"\"", mailbox \\ "\"\""), do: %Eximap.Imap.Request{command: "LSUB", params: [reference, mailbox]}
+  def list(reference \\ "\"\"", mailbox \\ "\"%\""),
+    do: %Eximap.Imap.Request{command: "LIST", params: [reference, mailbox]}
+
+  def lsub(reference \\ "\"\"", mailbox \\ "\"\""),
+    do: %Eximap.Imap.Request{command: "LSUB", params: [reference, mailbox]}
 
   @doc ~S"""
   The LOGOUT command informs the server that the client is done with
@@ -149,8 +154,12 @@ defmodule Eximap.Imap.Request do
   def create(name), do: %Eximap.Imap.Request{command: "CREATE", params: [name]}
   def delete(name), do: %Eximap.Imap.Request{command: "DELETE", params: [name]}
   def status(name, opts), do: %Eximap.Imap.Request{command: "STATUS", params: [name, opts]}
-  def append(name, opts), do: %Eximap.Imap.Request{command: "APPEND", params: [name, Enum.join(opts, "")]}
-  def rename(name, new_name), do: %Eximap.Imap.Request{command: "RENAME", params: [name, new_name]}
+
+  def append(name, opts),
+    do: %Eximap.Imap.Request{command: "APPEND", params: [name, Enum.join(opts, "")]}
+
+  def rename(name, new_name),
+    do: %Eximap.Imap.Request{command: "RENAME", params: [name, new_name]}
 
   @doc ~S"""
 
@@ -177,12 +186,26 @@ defmodule Eximap.Imap.Request do
   def close(), do: %Eximap.Imap.Request{command: "CLOSE", params: []}
   def expunge(), do: %Eximap.Imap.Request{command: "EXPUNGE", params: []}
   def search(flags), do: %Eximap.Imap.Request{command: "SEARCH", params: flags}
-  def fetch(sequence, flags), do: %Eximap.Imap.Request{command: "FETCH", params: [sequence, flags]}
-  def store(sequence, item, value), do: %Eximap.Imap.Request{command: "STORE", params: [sequence, item, value]}
-  def copy(sequence, mailbox), do: %Eximap.Imap.Request{command: "COPY", params: [sequence, mailbox]}
+
+  def fetch(sequence, flags),
+    do: %Eximap.Imap.Request{command: "FETCH", params: [sequence, flags]}
+
+  def store(sequence, item, value),
+    do: %Eximap.Imap.Request{command: "STORE", params: [sequence, item, value]}
+
+  def copy(sequence, mailbox),
+    do: %Eximap.Imap.Request{command: "COPY", params: [sequence, mailbox]}
+
   def uid(params), do: %Eximap.Imap.Request{command: "UID", params: params}
-  def uid_fetch(sequence, flags), do: %Eximap.Imap.Request{command: "UID FETCH", params: [sequence, flags]}
+
+  def uid_fetch(sequence, flags),
+    do: %Eximap.Imap.Request{command: "UID FETCH", params: [sequence, flags]}
+
   def uid_search(flags), do: %Eximap.Imap.Request{command: "UID SEARCH", params: flags}
-  def uid_copy(sequence, mailbox), do: %Eximap.Imap.Request{command: "UID COPY", params: [sequence, mailbox]}
-  def uid_store(sequence, item, value), do: %Eximap.Imap.Request{command: "UID STORE", params: [sequence, item, value]}
+
+  def uid_copy(sequence, mailbox),
+    do: %Eximap.Imap.Request{command: "UID COPY", params: [sequence, mailbox]}
+
+  def uid_store(sequence, item, value),
+    do: %Eximap.Imap.Request{command: "UID STORE", params: [sequence, item, value]}
 end

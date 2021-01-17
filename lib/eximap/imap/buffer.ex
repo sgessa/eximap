@@ -9,14 +9,17 @@ defmodule Eximap.Imap.Buffer do
         current_resp = current_response(responses)
         {buff, new_resp} = extract_response(buff, current_resp)
 
-        new_responses = if partial?(current_resp) do
-          [new_resp | Enum.drop(responses, 1)]
-        else
-          [new_resp | responses]
-        end
+        new_responses =
+          if partial?(current_resp) do
+            [new_resp | Enum.drop(responses, 1)]
+          else
+            [new_resp | responses]
+          end
+
         extract_responses(buff, new_responses)
 
-      false -> {buff, responses}
+      false ->
+        {buff, responses}
     end
   end
 
@@ -50,12 +53,12 @@ defmodule Eximap.Imap.Buffer do
     {taken, rest} = split_bytes(buff, bytes_left)
 
     bytes_left = bytes_left - byte_size(taken)
+
     if bytes_left == 0 do
       extract_response(rest, %{body: body <> taken, bytes_left: :unknown, last_line: ""})
     else
       extract_response(rest, %{body: body <> taken, bytes_left: bytes_left})
     end
-
   end
 
   defp current_response([]), do: %{body: "", bytes_left: 0}
